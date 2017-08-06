@@ -1,18 +1,48 @@
 import React from 'react'
+import {
+  Route,
+  Link
+} from 'react-router-dom'
+import sortBy from 'sort-by'
+import Bookshelf from './Bookshelf'
+import SearchBook from './SearchBook'
 import * as BooksAPI from './BooksAPI'
 import './App.css'
 
 class BooksApp extends React.Component {
   state = {
+    books: [],
+    newbooks: []
+
     /**
      * TODO: Instead of using this state variable to keep track of which page
      * we're on, use the URL in the browser's address bar. This will ensure that
      * users can use the browser's back and forward buttons to navigate between
      * pages, as well as provide a good URL they can bookmark and share.
      */
-    showSearchPage: true
+  }
+  updateBook = (book, evt) => {
+    let shelf = evt.target.value
+    let newbooks = this.state.books.slice()
+    let booksKeys = this.state.books.map((b) => {
+      return b.id
+    })
+    booksKeys.includes(book.id) ? (
+      this.setState((state) => ({ books: this.state.books.map((b) => { return b.id === book.id ? (b.shelf = shelf, b) : (b)}).sort(sortBy('title'))})),
+      BooksAPI.update(book, shelf).then(() => {})
+    ):(
+      book.shelf = shelf,
+      newbooks.push(book),
+      this.setState({ books: newbooks.sort(sortBy('title')) }),
+      BooksAPI.update(book, shelf).then(() => {})
+    )
   }
 
+  componentDidMount(){
+    BooksAPI.getAll().then((books) => {
+      this.setState({ books })
+    })
+  }
   render() {
     return (
       <div className="app">
